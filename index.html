@@ -1,0 +1,411 @@
+<html>
+<head>
+	<style>
+
+#result {
+	max-width: 800px;
+}
+#editor {
+	border: 2px solid gray;
+	width: 800px;
+	max-width: 800px;
+	min-height: 200px;
+}
+div {
+    display: block;
+}
+textarea {
+    border: 2px solid black;
+    margin-bottom: 5px;
+    margin-top: 5px;
+    padding: 5px;
+    width: 100%;
+}
+div {
+	display: block;
+}
+
+pre {
+    display: block;
+    font-family: monospace;
+    margin-bottom: 0;
+    margin-left: auto;
+    margin-right: auto;
+    position: relative;
+    text-align: left;
+    width: 1060px;
+}
+
+iframe[Attributes Style] {
+    width: 425px;
+    height: 355px;
+    border-top-width: 0px;
+    border-right-width: 0px;
+    border-bottom-width: 0px;
+    border-left-width: 0px;
+}
+.quotetext {
+    background-color: #fff;
+    border: 1px solid #ebebeb;
+    margin-bottom: 5px;
+    margin-left: 10px;
+    margin-top: 5px;
+    padding: 5px;
+}
+.img-a-l {
+	float: left;
+	padding-left: 8px;
+	padding-top: 4px;
+}
+.img-a-r {
+	float: right;
+	padding-left: 8px;
+	padding-top: 4px;
+}
+.codetext pre{
+	background-color: #fff;
+    border: 1px solid #ebebeb;
+    margin-bottom: 5px;
+    margin-left: 10px;
+    margin-top: 5px;
+    padding: 5px;
+}
+.userimg {
+	max-width: 100%;
+}
+/* Override above image max width*/
+img {
+	max-width: 100%;
+}
+#result {
+    margin-top: 10px;
+}
+		</style>
+	</head>
+	<body>
+		<p>TODO: Size and url formats delete all other formats. Fix that. Better UI? Size percentages keep increasing each time</p>
+		<div>
+			<b><a href="javascript:void(0)" onclick="document.execCommand('bold', false, null); showDemo();">B</a></b>
+			<i><a href="javascript:void(0)" onclick="document.execCommand('italic', false, null); showDemo();">I</a></i>
+			<u><a href="javascript:void(0)" onclick="document.execCommand('underline', false, null); showDemo();">U</a></u>
+			<u><a href="javascript:void(0)" onclick="document.execCommand('justifyLeft', false, null); showDemo();">Auto</a></u>
+			<u><a href="javascript:void(0)" onclick="document.execCommand('justifyCenter', false, null); showDemo();">Center</a></u>
+			<u><a href="javascript:void(0)" onclick="document.execCommand('justifyRight', false, null); showDemo();">Right</a></u>
+			<s><a href="javascript:void(0)" onclick="document.execCommand('strikethrough', false, null); showDemo();">S</a></s>
+			<!--
+			<a href="javascript:void(0)" onclick="addCodeTag(command='font', value=null, params={'size':document.getElementById('fontsizeselector').value + '%'}); showDemo();">Size</a>
+			-->
+			<a href="javascript:void(0)" onclick="fontSize(document.getElementById('fontsizeselector').value); showDemo();">Size</a>
+			<input id="fontsizeselector" value=100 size=2>%
+			<a href="javascript:void(0)" onclick="document.execCommand('foreColor', false, document.getElementById('textcolorselector').value); showDemo();">Color</a>
+			<input type="color" id="textcolorselector" value="#0000ff">
+			<b><a href="javascript:void(0)" onclick="document.execCommand('insertImage', false, prompt('Enter image URL: ')); showDemo();">Img</a></b>
+			<b><a href="javascript:void(0)" onclick="setURL(); showDemo();">URL</a></b>
+			<!--
+			<button onclick="editorbbcodeintohtml();">Convert</button>
+		-->
+		</div>
+		<div id="editor" contenteditable="true" spellcheck="false" onkeyup="showDemo();">Hello world</div>
+		<p>BBCode Result:</p>
+		<p id="bbcoderesult"></p>
+		<p>Div HMTL:</p>
+		<p id="demo">DEMO</p>
+		<p>HTML Result:</p>
+		<div id="result" style="background-color: #eee;" height="400" width="100%"></div>
+
+		<script>
+			var loopcounter = 0;
+			function format(command, value) {
+				document.execCommand(command, false, value);
+			}
+			function setURL() {
+				var sText = document.getSelection();
+				var url = prompt("Enter url: ");
+				document.execCommand("insertHTML", false, '<a href="' + url + '" target="_blank">' + sText + '</a>');
+			}
+
+			// this functions does what doing with execCommand is unconvinient
+			function addCodeTag(command, value=null, params={}, type="html") {
+				var v = "", p = "", op=null, ed=null;
+				if (type==="html") {op="<";ed=">"} else {op="[";ed="]";}
+				if (value !== null) {
+					v = "=value";
+				}
+				var keys = Object.keys(params);
+				if (keys.length > 0) {
+					for (var i=0; i++; i<keys.length) {
+						p = p + " " + keys[i] + "=" + params[keys[i]];
+					}
+				}
+				var sText = document.getSelection();
+				if (sText=="") {return}
+				var result = op + command + v + p + ed + sText + op + "/" + command + ed;
+				document.execCommand("insertHTML", false, '<font size="' + params.size + '">' + sText + '</font>');
+				//editorbbcodeintohtml();
+			}
+			function showDemo() {
+				var editor = document.getElementById("editor");
+				var demo = document.getElementById("demo");
+				var bbcoderesult = document.getElementById("bbcoderesult");
+				var result = document.getElementById("result");
+
+				demo.innerText = editor.innerHTML;
+				bbcoderesult.innerText = getHTML(editor.innerHTML);
+				result.innerHTML = demo.innerText;
+			}
+function fontSize(size) {
+	// https://stackoverflow.com/questions/5868295/document-execcommand-fontsize-in-pixels/56103356#56103356
+    var sel = document.getSelection(); // Gets selection
+
+    var selectedHtml = "";
+    if (sel.rangeCount) {
+        var container = document.createElement("div");
+        for (var i = 0, len = sel.rangeCount; i < len; ++i) {
+            container.appendChild(sel.getRangeAt(i).cloneContents());
+        }
+        const children = container.getElementsByTagName("*")
+        for(let child of children) {
+            if(child.style.fontSize) {
+                child.style.fontSize = `${size}%`
+            }
+        }
+        selectedHtml = container.innerHTML;
+    }
+
+    let html = `<div style="font-size: ${size}%;">${selectedHtml}</div>`
+    document.execCommand('insertHTML', false, html);
+}
+
+function replaceAll(str, r1, r2) {
+	while (str.indexOf(r1) !== -1) {
+		str = str.replace(r1, r2);
+	}
+	return str;
+}
+function convert2HTML(command, value, params, content) {
+    var result = ""
+    if (command=='b') {
+        result = "<b>" + content + "</b>";
+    } else if (command=='center') {
+        result = "<div style=\"text-align: center;\">" + content + "</div>";
+    } else if (command=='code') {
+        result = "<div class=\"codetext\"><pre>" + content + "</pre></div>"
+    } else if (command=='color') {
+        result = "<span style=\"color: " + value + "\">" + content + "</span>";
+    } else if (command=='i') {
+        result = "<i>" + content + "</i>";
+    } else if (command=='img') {
+    	var alignment = ""
+    	if (params !== undefined && params.align=="left") {
+    		alignment = " img-a-l";
+    	} else if (params !== undefined && params.align=="right") {
+    		alignment = " img-a-r";
+    	}
+        result = "<img class=\"userimg" + alignment + "\" src=\"" + content + "\">";
+    } else if (command=='list') {
+    	var list = "";
+    	var leading_content = content.indexOf('[*]');
+    	if (leading_content !== -1) {
+    		list = list + content.substring(0,leading_content);
+    		var remaining_content = content.substring(leading_content);
+    		while (remaining_content.indexOf('[*]') !== -1) {
+    			var end = remaining_content.substring(3).indexOf('[*]');
+    			if (end==-1) {end=remaining_content.length;}
+    			var item = remaining_content.substring(3, end+3);
+    			list += "<li>" + item + "</li>";
+    			remaining_content = remaining_content.substring(end+3);
+    		}
+    	} else {
+    		list = content;
+    	}
+    	if (value=="1") {result = "<ol>" + list + "</ol>";} else {result = "<ul>" + list + "</ul>";}
+    } else if (command=='quote') {
+        var autor_part = "";
+        if (value !== null && value !== "" && value[0] !== " ") {
+            if (value.indexOf(" ") !== -1) {
+                autor = value.substring(0, value.indexOf(" "));
+            } else {
+                autor = value;
+            }
+            autor_part = "<strong>" + autor + " said:</strong><br>"
+        }
+        result = "<div class=\"quotetext\">" + autor_part + content + "</div>";
+    } else if (command=='right') {
+        result = "<div style=\"text-align: right;\">" + content + "</div>";
+    } else if (command=='s') {
+        result = "<del>" + content + "</del>";
+    } else if (command=='size') {
+    	if (value===null || value === "") {
+    		return -1;
+    	}
+        result = "<span style=\"font-size: " + value + "%;\">" + content + "</span>";
+    } else if (command=='spoiler') {
+        if (value==null) {value="spoiler";}
+        result = "<div class=\"spoiler\"><input type=\"button\" onclick=\"this.nextElementSibling.style.display='inline-block';this.style.display='none';\" value=\"Show " + value + "\"><span style=\"display: none;\"><input type=\"button\" onclick=\"this.parentElement.previousElementSibling.style.display='inline-block';this.parentElement.style.display='none';\" value=\"Hide " + value + "\"><br>" + content + "</span></div>"
+    } else if (command=='u') {
+        result = "<u>" + content + "</u>";
+    } else if (command=='url') {
+    	if (value==null || value=="") {
+    		return -1;
+    	}
+        result = "<a href=\"" + value + "\" rel=\"nofollow\" target=\"_blank\">" + content + "</a>";
+    } else if (command=='yt') {
+        result = "<iframe class=\"movie youtube\" width=\"425\" height=\"355\" frameborder=\"0\" src=\"https://youtube.com/embed/" + content + "?rel=1\"></iframe>"
+    } else {
+        return -1;
+    }
+    return result;
+}
+function convert2BBCode(command, value, params, content) {
+	// TODO code, list, quote, size, spoiler, yt
+	var result = "";
+	if (command=='a') {
+		result = '[url="' + params.href + '"]' + content + "[/url]";
+	} else if (command=='b') {
+		result = "[b]" + content + "[/b]";
+	} else if (command=="div") {
+		if (!Object.keys(params).length > 0) {
+			return content;
+		}
+		if (params.style.indexOf("text-align: center;") >= 0) {
+			result = "[center]" + content + "[/center]";
+		} else if (params.style.indexOf("text-align: right;") >= 0) {
+			result = "[right]" + content + "[/right]";
+		} else if (params.style.indexOf("text-align: left;") >= 0) {
+			result = content;
+		}
+		if (params.style.indexOf("font-size:") >= 0) {
+			var size = params.style.substring(params.style.indexOf("font-size: ")+"font-size: ".length).split('%')[0];
+			result = '[size="' + size + '"]' + result + "[/size]";
+		}
+	} else if (command=='font') {
+		result = content;
+		if (params.color) {
+			result = '[color="' + params.color + '"]' + result + "[/color]";
+		}
+		if (params.size) {
+			result = '[size="' + params.size.replace('%', '') + '"]' + result + "[/size]";
+		}
+	} else if (command=='i') {
+		result = "[i]" + content + "[/i]";
+	} else if (command=='img') {
+		result = "[img]" + params.src + "[/img]";
+	} else if (command=='strike') {
+		result = "[s]" + content + "[/s]";
+	} else if (command=='u') {
+		result = "[u]" + content + "[/u]";
+	} else {
+		return -1;
+	}
+	return result;
+}
+function getTags(code, type="bbcode") {
+	function getParams(a) {
+		var b = ""; var c = []; var inString = false; var params = {};
+		for (var i=0; i<a.length; i++) {
+			if (a[i]==='"') { if (b !== "") c.push(b); b = ""; inString = !inString;
+			} else if (a[i] === ' ' && !inString) { if (b !== "") c.push(b); b = "";
+			} else if (a[i] === '=' && !inString) { if (b !== "") c.push(b); c.push(a[i]); b = "";
+			} else {b = b + a[i];}
+		}
+		if (b !== "") c.push(b);
+		while (true) {
+			if (c.length < 1) break; if (c[1] === "=" && c.length>2)	 {params[c[0]] = c[2]; c = c.slice(3);} else {params[c[0]] = null; c = c.slice(1);}
+		}
+		return params;
+	}
+	var OPSIGN, EDSIGN;
+	if (type=="bbcode") {OPSIGN="[";EDSIGN="]"} else if (type=="html") {OPSIGN="<";EDSIGN=">"}
+	var opbracket1=opbracket2=edbracket1=edbracket2=tag=value=command=content=null;
+	var opbracket1=opbracket2=edbracket1=edbracket2=tag=value=command=content=null;
+	var params={};
+	opbracket1 = code.indexOf(OPSIGN);
+	opbracket2 = opbracket1 + code.substring(opbracket1).indexOf(EDSIGN);
+	tag = code.substring(opbracket1+1,opbracket2);
+	command = tag.toLowerCase();
+
+	params = getParams(tag);
+	command = Object.keys(params)[0];
+	value = params[command];
+	delete params[Object.keys(params)[0]];
+
+	//Get ending tag
+	edbracket1 = code.substring(opbracket2+1).toLowerCase().indexOf(OPSIGN + '/' + command + EDSIGN);
+	if (edbracket1 !== -1) {
+		edbracket1 = edbracket1 + opbracket2+1;
+		edbracket2 = edbracket1 + ('/' + command + EDSIGN).length;
+		content = code.substring(opbracket2+1, edbracket1);
+	}
+	var wholetag =  {"op1":opbracket1, "op2":opbracket2, "ed1":edbracket1, "ed2":edbracket2, "command":command, "tag":tag, "value":value, "params":params, "content":content};
+	wholetag.params = params;
+	return wholetag
+}
+function convertCode(code, type="bbcode") {
+	var emptytags = ["img"];
+	var OPSIGN, EDSIGN;
+	if (type=="bbcode") {OPSIGN="[";EDSIGN="]"} else if (type=="html") {OPSIGN="<";EDSIGN=">"}
+	var tags = getTags(code, type);
+	var subcode = code.substring(tags.op2+1, tags.ed1).indexOf(OPSIGN+tags.command);
+	var subtags = null;
+	if (subcode !== -1) {subcode = subcode + tags.op2+1; subtags=getTags(code.substring(subcode), type);}
+	// If there are inner command opening tags, process those
+	if (tags.content !== null && subtags !== null && subtags.content !== null) {
+		code = code.substring(0, subcode) + convertCode(code.substring(subcode), type);
+		subtags = getTags(code, type);
+		if (subtags.content !== null) {
+			code = convertCode(code, type);
+		}
+	} else if (tags.content !== null || (type=="html" && (emptytags.indexOf(tags.command) >= 0))) {
+		if (type=="bbcode") {
+			result = convert2HTML(tags.command, tags.value, tags.params, tags.content);
+		} else if (type=="html") {
+			result = convert2BBCode(tags.command, tags.value, tags.params, tags.content);
+		}
+		if (result !== -1) {
+            if (tags.command !== "code" && !(emptytags.indexOf(tags.command) >= 0)) {
+                result = convertCode(result, type);
+            }
+            if (emptytags.indexOf(tags.command) >= 0) {
+            	code = code.substring(0, tags.op1) + result + convertCode(code.substring(tags.op2+1), type);
+            } else {
+				code = code.substring(0, tags.op1) + result + convertCode(code.substring(tags.ed2+1), type);
+			}
+		} else {
+            // Command is not in commands
+            code = code.substring(0, tags.op2+1) + convertCode(tags.content, type) + code.substring(tags.ed1, tags.ed2+1) + convertCode(code.substring(tags.ed2+1), type);
+        }
+    // First tag failed. Try remaining code
+	} else {
+        if (tags.op1 !== null && tags.op1 !== -1) {
+           var nextop1 = code.substring(tags.op1+1).indexOf(OPSIGN);
+           if (nextop1 !== -1) {
+                nextop1 = nextop1 + tags.op1+1;
+                code = code.substring(0, nextop1) + convertCode(code.substring(nextop1), type);
+           }
+        }
+	}
+	return code;
+}
+function hasValidTags(code) {
+    var tags = getTags(code);
+    if (tags.content !== null) {return true;} else {return false;}
+}
+
+// converts bbcode into html
+function getBBCode(code) {
+    code = replaceAll(code, '<', '&lt;');
+    code = replaceAll(code, '>', '&gt;');
+    code = code.replace(/\n/g, "<br>");
+    code = convertCode(code);
+    return code;
+}
+// converts html into bbcode
+function getHTML(code)  {
+	code = replaceAll(code, "<br>", "\n");
+	code = convertCode(code, "html");
+	return code;
+}
+// Code made by _NaLi
+		</script>
+	</body>
+	</html>
